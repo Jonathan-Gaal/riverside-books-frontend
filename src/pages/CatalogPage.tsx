@@ -75,11 +75,18 @@ export function CatalogPage() {
 
   return (
     <div>
-      <div className="mb-8 rounded-2xl bg-gradient-to-br from-brand-700 to-brand-800 px-8 py-10 text-white">
-        <h1 className="text-3xl font-bold tracking-tight">Find your next read</h1>
-        <p className="mt-2 text-brand-100">
-          Search our shelves, check what's in stock, and reserve a copy for pickup.
-        </p>
+      <div className="mb-8 flex items-center justify-between gap-6 rounded-2xl bg-gradient-to-br from-brand-700 to-brand-800 px-8 py-10 text-white">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Find your next read</h1>
+          <p className="mt-2 text-brand-100">
+            Search our shelves, check what's in stock, and reserve a copy for pickup.
+          </p>
+        </div>
+        <img
+          src="/logo-hero.png"
+          alt="Riverside Books and Gifts"
+          className="hidden h-40 w-40 shrink-0 rounded-full border-4 border-white/20 shadow-lg sm:block"
+        />
       </div>
 
       <form className="mb-8 flex flex-wrap gap-3" onSubmit={handleSearchSubmit}>
