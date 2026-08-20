@@ -13,7 +13,13 @@ export function BookCover({
   const coverUrl = useBookCoverUrl(book);
 
   return coverUrl ? (
-    <img src={coverUrl} alt={book.title} className={imageClassName} />
+    <img
+      src={coverUrl}
+      alt={book.title}
+      className={imageClassName}
+      loading="lazy"
+      decoding="async"
+    />
   ) : (
     <span className={fallbackClassName}>📖</span>
   );

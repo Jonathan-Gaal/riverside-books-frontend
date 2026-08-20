@@ -62,4 +62,22 @@ describe("fetchOpenLibraryCoverUrl", () => {
     const url = await fetchOpenLibraryCoverUrl("Rate Limited Book", "Author");
     expect(url).toBeNull();
   });
+
+  it("de-duplicates concurrent lookups for the same title/author into one request", async () => {
+    let resolveResponse!: (value: unknown) => void;
+    const fetchMock = vi.fn().mockImplementation(
+      () => new Promise((resolve) => { resolveResponse = resolve; }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    const firstCall = fetchOpenLibraryCoverUrl("Concurrent Book", "Author");
+    const secondCall = fetchOpenLibraryCoverUrl("Concurrent Book", "Author");
+
+    resolveResponse(await jsonResponse({ docs: [{ cover_i: 42 }] }));
+    const [firstUrl, secondUrl] = await Promise.all([firstCall, secondCall]);
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(firstUrl).toBe("https://covers.openlibrary.org/b/id/42-M.jpg");
+    expect(secondUrl).toBe(firstUrl);
+  });
 });
