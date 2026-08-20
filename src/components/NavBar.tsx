@@ -10,8 +10,11 @@ export function NavBar() {
   return (
     <header className="sticky top-0 z-10 border-b border-brand-100 bg-white/90 backdrop-blur">
       <div className="mx-auto flex max-w-5xl items-center gap-8 px-6 py-4">
-        <NavLink to="/catalog" className="text-lg font-semibold tracking-tight text-brand-800">
-          📚 Riverside Books
+        <NavLink to="/catalog" className="flex items-center gap-2">
+          <img src="/logo.png" alt="Riverside Books and Gifts" className="h-9 w-9 rounded-full" />
+          <span className="text-lg font-semibold tracking-tight text-brand-800">
+            Riverside Books
+          </span>
         </NavLink>
         <nav className="flex flex-1 gap-1">
           {LINKS.map((link) => (
