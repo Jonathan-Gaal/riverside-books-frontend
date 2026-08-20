@@ -2,6 +2,9 @@ import { useEffect, useState } from "react";
 import { api, ApiError } from "@/lib/api";
 import type { Book } from "@/types";
 import { BookCard } from "@/components/BookCard";
+import { PaginationControls } from "@/components/PaginationControls";
+
+const PAGE_SIZE = 20;
 
 export function CatalogPage() {
   const [books, setBooks] = useState<Book[]>([]);
@@ -11,6 +14,8 @@ export function CatalogPage() {
   const [searchInput, setSearchInput] = useState("");
   const [submittedQuery, setSubmittedQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
   // Fetched once, unfiltered, so the category dropdown doesn't collapse to a
   // single option once the user has already narrowed results by category.
@@ -43,13 +48,24 @@ export function CatalogPage() {
     if (categoryFilter) {
       params.set("category", categoryFilter);
     }
-    const queryString = params.toString();
+    params.set("page", String(currentPage));
+    params.set("limit", String(PAGE_SIZE));
 
     api
-      .get<Book[]>(`/books${queryString ? `?${queryString}` : ""}`)
-      .then((result) => {
-        if (!cancelled) {
-          setBooks(result);
+      .getPaginated<Book>(`/books?${params.toString()}`)
+      .then(({ items, meta }) => {
+        if (cancelled) {
+          return;
+        }
+        if (meta) {
+          // Backend paginated server-side -- `items` is already just this page.
+          setBooks(items);
+          setTotalPages(meta.totalPages);
+        } else {
+          // Backend hasn't deployed pagination yet, so `items` is every match --
+          // slice it client-side so the controls still work.
+          setTotalPages(Math.max(1, Math.ceil(items.length / PAGE_SIZE)));
+          setBooks(items.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE));
         }
       })
       .catch((error: unknown) => {
@@ -66,11 +82,17 @@ export function CatalogPage() {
     return () => {
       cancelled = true;
     };
-  }, [submittedQuery, categoryFilter]);
+  }, [submittedQuery, categoryFilter, currentPage]);
 
   function handleSearchSubmit(event: React.FormEvent) {
     event.preventDefault();
+    setCurrentPage(1);
     setSubmittedQuery(searchInput.trim());
+  }
+
+  function handleCategoryChange(nextCategory: string) {
+    setCurrentPage(1);
+    setCategoryFilter(nextCategory);
   }
 
   return (
@@ -100,7 +122,7 @@ export function CatalogPage() {
         <select
           className="rounded-lg border border-stone-300 px-4 py-2.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200"
           value={categoryFilter}
-          onChange={(event) => setCategoryFilter(event.target.value)}
+          onChange={(event) => handleCategoryChange(event.target.value)}
         >
           <option value="">All categories</option>
           {availableCategories.map((category) => (
@@ -130,6 +152,14 @@ export function CatalogPage() {
           <BookCard key={book.id} book={book} />
         ))}
       </div>
+
+      {!loading && !errorMessage && (
+        <PaginationControls
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+        />
+      )}
     </div>
   );
 }

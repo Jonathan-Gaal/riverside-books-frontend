@@ -1,3 +1,5 @@
+import type { PaginationMeta } from "@/types";
+
 export class ApiError extends Error {
   status: number;
   code: string | null;
@@ -8,7 +10,9 @@ export class ApiError extends Error {
   }
 }
 
-async function request<T>(path: string, init?: RequestInit): Promise<T> {
+type Envelope<T> = { data: T; error: null; meta?: PaginationMeta };
+
+async function requestEnvelope<T>(path: string, init?: RequestInit): Promise<Envelope<T>> {
   const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}${path}`, {
     ...init,
     headers: {
@@ -25,13 +29,22 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
       body.error?.code ?? null,
     );
   }
-  return body.data as T;
+  return body as Envelope<T>;
 }
 
 export const api = {
-  get: <T>(path: string) => request<T>(path),
+  get: <T>(path: string) => requestEnvelope<T>(path).then((envelope) => envelope.data),
+  // `meta` is only present once the backend has deployed pagination support for
+  // that route -- absent means the endpoint returned every match, uncut. T is
+  // the item type (matching api.get<T[]>'s convention) -- items comes back T[].
+  getPaginated: <T>(path: string) =>
+    requestEnvelope<T[]>(path).then((envelope) => ({ items: envelope.data, meta: envelope.meta })),
   post: <T>(path: string, body: unknown) =>
-    request<T>(path, { method: "POST", body: JSON.stringify(body) }),
+    requestEnvelope<T>(path, { method: "POST", body: JSON.stringify(body) }).then(
+      (envelope) => envelope.data,
+    ),
   patch: <T>(path: string, body: unknown) =>
-    request<T>(path, { method: "PATCH", body: JSON.stringify(body) }),
+    requestEnvelope<T>(path, { method: "PATCH", body: JSON.stringify(body) }).then(
+      (envelope) => envelope.data,
+    ),
 };

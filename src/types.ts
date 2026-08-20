@@ -2,6 +2,13 @@ export type StockStatus = "in_stock" | "low_stock" | "out_of_stock";
 export type OrderStatus = "placed" | "ready_for_pickup" | "completed" | "cancelled";
 export type PaymentStatus = "unpaid" | "paid_online" | "pay_in_store";
 
+export type PaginationMeta = {
+  page: number;
+  pageSize: number;
+  totalItems: number;
+  totalPages: number;
+};
+
 export type Inventory = {
   id: string;
   bookId: string;

@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import { CatalogPage } from "@/pages/CatalogPage";
 import type { Book } from "@/types";
@@ -25,8 +26,15 @@ const SAMPLE_BOOK: Book = {
   },
 };
 
-function jsonResponse(data: unknown) {
-  return Promise.resolve({ ok: true, json: () => Promise.resolve({ data, error: null }) });
+function makeBook(index: number): Book {
+  return { ...SAMPLE_BOOK, id: `book-${index}`, title: `Book ${index}` };
+}
+
+function jsonResponse(data: unknown, meta?: unknown) {
+  return Promise.resolve({
+    ok: true,
+    json: () => Promise.resolve({ data, error: null, ...(meta ? { meta } : {}) }),
+  });
 }
 
 function renderCatalogPage() {
@@ -57,5 +65,36 @@ describe("CatalogPage", () => {
 
     expect(await screen.findByText("The Pragmatic Programmer")).toBeInTheDocument();
     expect(screen.getByText("In Stock")).toBeInTheDocument();
+  });
+
+  it("paginates client-side when the backend hasn't deployed pagination yet (no meta)", async () => {
+    const allBooks = Array.from({ length: 25 }, (_, i) => makeBook(i));
+    vi.stubGlobal("fetch", vi.fn().mockImplementation(() => jsonResponse(allBooks)));
+    const user = userEvent.setup();
+    renderCatalogPage();
+
+    expect(await screen.findByText("Page 1 of 2")).toBeInTheDocument();
+    expect(screen.getByText("Book 0")).toBeInTheDocument();
+    expect(screen.queryByText("Book 20")).not.toBeInTheDocument();
+
+    await user.click(screen.getByLabelText("Next page"));
+
+    expect(await screen.findByText("Page 2 of 2")).toBeInTheDocument();
+    expect(screen.getByText("Book 20")).toBeInTheDocument();
+    expect(screen.queryByText("Book 0")).not.toBeInTheDocument();
+  });
+
+  it("uses server-driven pagination directly when the backend returns meta", async () => {
+    const pageOneBooks = Array.from({ length: 20 }, (_, i) => makeBook(i));
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockImplementation(() =>
+        jsonResponse(pageOneBooks, { page: 1, pageSize: 20, totalItems: 45, totalPages: 3 }),
+      ),
+    );
+    renderCatalogPage();
+
+    expect(await screen.findByText("Page 1 of 3")).toBeInTheDocument();
+    expect(screen.getByText("Book 0")).toBeInTheDocument();
   });
 });
