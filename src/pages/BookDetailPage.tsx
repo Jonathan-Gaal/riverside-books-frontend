@@ -5,6 +5,7 @@ import { useCustomer } from "@/lib/customer-context";
 import type { Book, Order } from "@/types";
 import { formatCents } from "@/lib/money";
 import { StockBadge } from "@/components/StockBadge";
+import { BookCover } from "@/components/BookCover";
 import { GuestContactFields, type GuestContact } from "@/components/GuestContactFields";
 
 const EMPTY_CONTACT: GuestContact = { name: "", email: "", phone: "" };
@@ -106,11 +107,7 @@ export function BookDetailPage() {
   return (
     <div className="grid gap-8 md:grid-cols-[220px_1fr]">
       <div className="flex aspect-[3/4] items-center justify-center overflow-hidden rounded-2xl border border-stone-200 bg-brand-50">
-        {book.imageUrl ? (
-          <img src={book.imageUrl} alt={book.title} className="h-full w-full object-cover" />
-        ) : (
-          <span className="text-6xl">📖</span>
-        )}
+        <BookCover book={book} imageClassName="h-full w-full object-cover" fallbackClassName="text-6xl" />
       </div>
       <div>
         <h1 className="text-2xl font-bold text-stone-900">{book.title}</h1>

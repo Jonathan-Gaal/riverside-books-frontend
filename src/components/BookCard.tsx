@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import type { Book } from "@/types";
 import { formatCents } from "@/lib/money";
 import { StockBadge } from "@/components/StockBadge";
+import { BookCover } from "@/components/BookCover";
 
 export function BookCard({ book }: { book: Book }) {
   return (
@@ -10,11 +11,7 @@ export function BookCard({ book }: { book: Book }) {
       className="group flex flex-col overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
     >
       <div className="flex aspect-[3/4] items-center justify-center bg-brand-50">
-        {book.imageUrl ? (
-          <img src={book.imageUrl} alt={book.title} className="h-full w-full object-cover" />
-        ) : (
-          <span className="text-4xl">📖</span>
-        )}
+        <BookCover book={book} imageClassName="h-full w-full object-cover" fallbackClassName="text-4xl" />
       </div>
       <div className="flex flex-1 flex-col gap-1 p-4">
         <p className="line-clamp-2 font-semibold text-stone-900 group-hover:text-brand-700">
