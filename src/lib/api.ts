@@ -1,3 +1,4 @@
+import { auth } from "@/lib/firebase";
 import type { PaginationMeta } from "@/types";
 
 export class ApiError extends Error {
@@ -13,10 +14,17 @@ export class ApiError extends Error {
 type Envelope<T> = { data: T; error: null; meta?: PaginationMeta };
 
 async function requestEnvelope<T>(path: string, init?: RequestInit): Promise<Envelope<T>> {
+  // Attach the signed-in customer's Firebase ID token so authed backend routes
+  // (e.g. GET /customers/me) can identify them. getIdToken() returns a fresh,
+  // auto-refreshed token; absent (logged out) we just send no Authorization header
+  // and public routes keep working.
+  const token = await auth.currentUser?.getIdToken();
+
   const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}${path}`, {
     ...init,
     headers: {
       "Content-Type": "application/json",
+      ...(token && { Authorization: `Bearer ${token}` }),
       ...init?.headers,
     },
   });
