@@ -20,7 +20,8 @@ export function AuthPage() {
     (location.state as { from?: string } | null)?.from ?? "/account";
 
   const [mode, setMode] = useState<Mode>("login");
-  const [name, setName] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
@@ -39,7 +40,8 @@ export function AuthPage() {
   const passwordsMatch = password === confirm;
   const showMismatch = mode === "signup" && confirmTouched && !passwordsMatch;
   const canSubmitSignup =
-    name.trim().length > 0 &&
+    firstName.trim().length > 0 &&
+    lastName.trim().length > 0 &&
     email.trim().length > 0 &&
     isAcceptablePassword(password) &&
     passwordsMatch;
@@ -81,7 +83,11 @@ export function AuthPage() {
         // Firebase = credentials; the loyalty record lives in the backend, joined by
         // email. Create/link it now so the account page is populated on arrival.
         try {
-          await identify({ name: name.trim(), email: email.trim() });
+          await identify({
+            firstName: firstName.trim(),
+            lastName: lastName.trim(),
+            email: email.trim(),
+          });
         } catch (linkError) {
           // A 409 means a loyalty row already exists for this email (e.g. a prior guest
           // order). The Firebase account still succeeded; AccountPage will offer to
@@ -159,19 +165,35 @@ export function AuthPage() {
 
       <form className="flex flex-col gap-4" onSubmit={handleSubmit} noValidate>
         {mode === "signup" && (
-          <div className="flex flex-col gap-1">
-            <label htmlFor="auth-name" className={LABEL_CLASSES}>
-              Name
-            </label>
-            <input
-              id="auth-name"
-              type="text"
-              className={INPUT_CLASSES}
-              value={name}
-              onChange={(event) => setName(event.target.value)}
-              autoComplete="name"
-              required
-            />
+          <div className="flex gap-3">
+            <div className="flex flex-1 flex-col gap-1">
+              <label htmlFor="auth-first-name" className={LABEL_CLASSES}>
+                First name
+              </label>
+              <input
+                id="auth-first-name"
+                type="text"
+                className={INPUT_CLASSES}
+                value={firstName}
+                onChange={(event) => setFirstName(event.target.value)}
+                autoComplete="given-name"
+                required
+              />
+            </div>
+            <div className="flex flex-1 flex-col gap-1">
+              <label htmlFor="auth-last-name" className={LABEL_CLASSES}>
+                Last name
+              </label>
+              <input
+                id="auth-last-name"
+                type="text"
+                className={INPUT_CLASSES}
+                value={lastName}
+                onChange={(event) => setLastName(event.target.value)}
+                autoComplete="family-name"
+                required
+              />
+            </div>
           </div>
         )}
 

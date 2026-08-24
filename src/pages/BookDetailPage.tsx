@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { api, ApiError } from "@/lib/api";
 import { useCustomer } from "@/lib/customer-context";
-import type { Book, Order } from "@/types";
+import { customerFullName, type Book, type Order } from "@/types";
 import { formatCents } from "@/lib/money";
 import { StockBadge } from "@/components/StockBadge";
 import { BookCover } from "@/components/BookCover";
@@ -72,7 +72,7 @@ export function BookDetailPage() {
       // POST /orders finds-or-creates the customer server-side by email/phone, so
       // guest checkout is one request -- no separate "create customer" step needed.
       const order = await api.post<Order>("/orders", {
-        customerName: customer?.name ?? contact.name.trim(),
+        customerName: customer ? customerFullName(customer) : contact.name.trim(),
         ...(customer?.email || contact.email.trim()
           ? { customerEmail: customer?.email ?? contact.email.trim() }
           : {}),
@@ -160,7 +160,7 @@ export function BookDetailPage() {
 
             {customer ? (
               <p className="text-sm text-stone-500">
-                Ordering as {customer.name} ({customer.email ?? customer.phone}).
+                Ordering as {customerFullName(customer)} ({customer.email ?? customer.phone}).
               </p>
             ) : (
               <GuestContactFields contact={contact} onChange={setContact} idPrefix="preorder" />

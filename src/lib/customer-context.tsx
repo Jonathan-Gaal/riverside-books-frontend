@@ -5,7 +5,8 @@ import type { Customer } from "@/types";
 const STORAGE_KEY = "riverside_customer";
 
 export type IdentifyInput = {
-  name: string;
+  firstName: string;
+  lastName?: string;
   email?: string;
   phone?: string;
 };

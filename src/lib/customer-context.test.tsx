@@ -2,11 +2,12 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { CustomerProvider, useCustomer } from "@/lib/customer-context";
-import type { Customer } from "@/types";
+import { customerFullName, type Customer } from "@/types";
 
 const MOCK_CUSTOMER: Customer = {
   id: "customer-1",
-  name: "Ada Lovelace",
+  firstName: "Ada",
+  lastName: "Lovelace",
   email: "ada@example.com",
   phone: null,
   loyaltyStampCount: 3,
@@ -17,10 +18,12 @@ function TestHarness() {
   const { customer, identify, refresh, loadMe, signOut } = useCustomer();
   return (
     <div>
-      <p data-testid="customer-name">{customer?.name ?? "none"}</p>
+      <p data-testid="customer-name">{customer ? customerFullName(customer) : "none"}</p>
       <p data-testid="stamp-count">{customer?.loyaltyStampCount ?? "none"}</p>
       <button
-        onClick={() => identify({ name: "Ada Lovelace", email: "ada@example.com" })}
+        onClick={() =>
+          identify({ firstName: "Ada", lastName: "Lovelace", email: "ada@example.com" })
+        }
       >
         Identify
       </button>

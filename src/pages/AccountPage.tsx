@@ -5,7 +5,7 @@ import { useAuth } from "@/lib/auth-context";
 import { useCustomer } from "@/lib/customer-context";
 import { STAMPS_PER_REWARD } from "@/lib/loyalty";
 import { formatCents } from "@/lib/money";
-import type { Order } from "@/types";
+import { customerFullName, type Order } from "@/types";
 import { OrderStatusBadge } from "@/components/OrderStatusBadge";
 
 // Shown only when GET /customers/me refused to link (403 EMAIL_NOT_VERIFIED): an account
@@ -216,7 +216,7 @@ export function AccountPage() {
       </div>
 
       <div className="rounded-2xl border border-stone-200 bg-white p-6 shadow-sm">
-        <p className="font-medium text-stone-900">{customer.name}</p>
+        <p className="font-medium text-stone-900">{customerFullName(customer)}</p>
         <p className="text-sm text-stone-500">{user?.email ?? customer.email ?? customer.phone}</p>
       </div>
 
