@@ -1,6 +1,8 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import { AuthProvider } from "@/lib/auth-context";
 import { CustomerProvider } from "@/lib/customer-context";
+import { CartProvider } from "@/lib/cart-context";
+import { FavoritesProvider } from "@/lib/favorites-context";
 import { NavBar } from "@/components/NavBar";
 import { EmailVerificationBanner } from "@/components/EmailVerificationBanner";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
@@ -10,6 +12,10 @@ import { AccountPage } from "@/pages/AccountPage";
 import { AuthPage } from "@/pages/AuthPage";
 import { OrderStatusPage } from "@/pages/OrderStatusPage";
 import { EventsPage } from "@/pages/EventsPage";
+import { FavoritesPage } from "@/pages/FavoritesPage";
+import { CartPage } from "@/pages/CartPage";
+import { CheckoutPage } from "@/pages/CheckoutPage";
+import { CheckoutReturnPage } from "@/pages/CheckoutReturnPage";
 
 function AppLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -75,6 +81,38 @@ function AppRoutes() {
           </AppLayout>
         }
       />
+      <Route
+        path="/favorites"
+        element={
+          <AppLayout>
+            <FavoritesPage />
+          </AppLayout>
+        }
+      />
+      <Route
+        path="/cart"
+        element={
+          <AppLayout>
+            <CartPage />
+          </AppLayout>
+        }
+      />
+      <Route
+        path="/checkout"
+        element={
+          <AppLayout>
+            <CheckoutPage />
+          </AppLayout>
+        }
+      />
+      <Route
+        path="/checkout/return"
+        element={
+          <AppLayout>
+            <CheckoutReturnPage />
+          </AppLayout>
+        }
+      />
       <Route path="*" element={<Navigate to="/catalog" replace />} />
     </Routes>
   );
@@ -84,7 +122,11 @@ export function App() {
   return (
     <AuthProvider>
       <CustomerProvider>
-        <AppRoutes />
+        <FavoritesProvider>
+          <CartProvider>
+            <AppRoutes />
+          </CartProvider>
+        </FavoritesProvider>
       </CustomerProvider>
     </AuthProvider>
   );

@@ -5,6 +5,8 @@ import { useCustomer } from "@/lib/customer-context";
 import { customerFullName, type Book, type Order } from "@/types";
 import { formatCents } from "@/lib/money";
 import { StockBadge } from "@/components/StockBadge";
+import { AddToCartButton } from "@/components/AddToCartButton";
+import { FavoriteButton } from "@/components/FavoriteButton";
 import { BookCover } from "@/components/BookCover";
 import { GuestContactFields, type GuestContact } from "@/components/GuestContactFields";
 
@@ -120,6 +122,11 @@ export function BookDetailPage() {
             {formatCents(book.priceCents)}
           </span>
           <StockBadge status={book.inventory?.status} />
+        </div>
+        <div className="mt-4 flex items-center gap-3">
+          <AddToCartButton book={book} className="px-5 py-2.5" />
+          <FavoriteButton book={book} />
+          <span className="text-sm text-stone-400">Add to cart to pay online at checkout.</span>
         </div>
         {book.description && <p className="mt-4 text-stone-700">{book.description}</p>}
 

@@ -3,6 +3,8 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import { CatalogPage } from "@/pages/CatalogPage";
+import { CartProvider } from "@/lib/cart-context";
+import { FavoritesProvider } from "@/lib/favorites-context";
 import type { Book } from "@/types";
 
 const SAMPLE_BOOK: Book = {
@@ -40,7 +42,11 @@ function jsonResponse(data: unknown, meta?: unknown) {
 function renderCatalogPage() {
   return render(
     <MemoryRouter>
-      <CatalogPage />
+      <FavoritesProvider>
+        <CartProvider>
+          <CatalogPage />
+        </CartProvider>
+      </FavoritesProvider>
     </MemoryRouter>,
   );
 }

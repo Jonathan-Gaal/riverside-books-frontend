@@ -1,15 +1,23 @@
 import { NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "@/lib/auth-context";
 import { useCustomer } from "@/lib/customer-context";
+import { useCart } from "@/lib/cart-context";
 
 const LINKS = [
   { to: "/catalog", label: "Catalog" },
   { to: "/events", label: "Events" },
+  { to: "/favorites", label: "Favorites" },
 ];
+
+const navLinkClass = ({ isActive }: { isActive: boolean }) =>
+  `rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+    isActive ? "bg-brand-700 text-white" : "text-stone-600 hover:bg-brand-50 hover:text-brand-800"
+  }`;
 
 export function NavBar() {
   const { user, signOut: signOutAuth } = useAuth();
   const { signOut: signOutCustomer } = useCustomer();
+  const { itemCount } = useCart();
   const navigate = useNavigate();
 
   async function handleLogout() {
@@ -28,35 +36,31 @@ export function NavBar() {
         </NavLink>
         <nav className="flex flex-1 items-center gap-1">
           {LINKS.map((link) => (
-            <NavLink
-              key={link.to}
-              to={link.to}
-              className={({ isActive }) =>
-                `rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
-                  isActive
-                    ? "bg-brand-700 text-white"
-                    : "text-stone-600 hover:bg-brand-50 hover:text-brand-800"
-                }`
-              }
-            >
+            <NavLink key={link.to} to={link.to} className={navLinkClass}>
               {link.label}
             </NavLink>
           ))}
           {user && (
-            <NavLink
-              to="/account"
-              className={({ isActive }) =>
-                `rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
-                  isActive
-                    ? "bg-brand-700 text-white"
-                    : "text-stone-600 hover:bg-brand-50 hover:text-brand-800"
-                }`
-              }
-            >
+            <NavLink to="/account" className={navLinkClass}>
               My Account
             </NavLink>
           )}
         </nav>
+        <NavLink
+          to="/cart"
+          className={({ isActive }) =>
+            `relative rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+              isActive ? "bg-brand-700 text-white" : "text-stone-600 hover:bg-brand-50 hover:text-brand-800"
+            }`
+          }
+        >
+          Cart
+          {itemCount > 0 && (
+            <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-rose-500 px-1 text-xs font-semibold text-white">
+              {itemCount}
+            </span>
+          )}
+        </NavLink>
         {user ? (
           <button
             type="button"
