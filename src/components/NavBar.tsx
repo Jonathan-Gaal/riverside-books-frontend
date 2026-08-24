@@ -41,6 +41,11 @@ export function NavBar() {
             </NavLink>
           ))}
           {user && (
+            <NavLink to="/orders" className={navLinkClass}>
+              Orders
+            </NavLink>
+          )}
+          {user && (
             <NavLink to="/account" className={navLinkClass}>
               My Account
             </NavLink>

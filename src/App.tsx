@@ -10,6 +10,7 @@ import { CatalogPage } from "@/pages/CatalogPage";
 import { BookDetailPage } from "@/pages/BookDetailPage";
 import { AccountPage } from "@/pages/AccountPage";
 import { AuthPage } from "@/pages/AuthPage";
+import { OrdersPage } from "@/pages/OrdersPage";
 import { OrderStatusPage } from "@/pages/OrderStatusPage";
 import { EventsPage } from "@/pages/EventsPage";
 import { FavoritesPage } from "@/pages/FavoritesPage";
@@ -69,6 +70,16 @@ function AppRoutes() {
           <AppLayout>
             <ProtectedRoute>
               <AccountPage />
+            </ProtectedRoute>
+          </AppLayout>
+        }
+      />
+      <Route
+        path="/orders"
+        element={
+          <AppLayout>
+            <ProtectedRoute>
+              <OrdersPage />
             </ProtectedRoute>
           </AppLayout>
         }

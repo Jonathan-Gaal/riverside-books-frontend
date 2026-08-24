@@ -4,9 +4,8 @@ import { api, ApiError } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { useCustomer } from "@/lib/customer-context";
 import { STAMPS_PER_REWARD } from "@/lib/loyalty";
-import { formatCents } from "@/lib/money";
 import { customerFullName, type Order } from "@/types";
-import { OrderStatusBadge } from "@/components/OrderStatusBadge";
+import { OrderRow } from "@/components/OrderRow";
 
 // Shown only when GET /customers/me refused to link (403 EMAIL_NOT_VERIFIED): an account
 // already exists for this email, and the backend won't hand it over until the Firebase
@@ -101,20 +100,23 @@ function OrderHistory({ customerId }: { customerId: string }) {
     return <p className="text-sm text-stone-500">No pre-orders yet.</p>;
   }
 
+  // Preview: the 3 most recent (backend returns oldest-first), with a link to the full
+  // Orders page for everything else.
+  const recent = [...orders].reverse().slice(0, 3);
+
   return (
-    <div className="divide-y divide-stone-100">
-      {orders.map((order) => (
-        <Link
-          key={order.id}
-          to={`/orders/${order.id}`}
-          className="flex items-center justify-between gap-3 py-3 text-sm hover:text-brand-700"
-        >
-          <span className="text-stone-700">
-            {new Date(order.createdAt).toLocaleDateString()} — {formatCents(order.totalCents)}
-          </span>
-          <OrderStatusBadge status={order.status} />
-        </Link>
-      ))}
+    <div className="flex flex-col gap-1">
+      <div className="divide-y divide-stone-100">
+        {recent.map((order) => (
+          <OrderRow key={order.id} order={order} />
+        ))}
+      </div>
+      <Link
+        to="/orders"
+        className="mt-1 self-start px-3 text-sm font-medium text-brand-700 hover:text-brand-800"
+      >
+        View all orders →
+      </Link>
     </div>
   );
 }
