@@ -1,68 +1,54 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { api, ApiError } from "@/lib/api";
+import { useAuth } from "@/lib/auth-context";
 import { useCustomer } from "@/lib/customer-context";
 import { STAMPS_PER_REWARD } from "@/lib/loyalty";
-import { formatCents } from "@/lib/money";
-import type { Order } from "@/types";
-import { OrderStatusBadge } from "@/components/OrderStatusBadge";
-import { GuestContactFields, type GuestContact } from "@/components/GuestContactFields";
+import { customerFullName, type Order } from "@/types";
+import { OrderRow } from "@/components/OrderRow";
 
-const EMPTY_CONTACT: GuestContact = { name: "", email: "", phone: "" };
+// Shown only when GET /customers/me refused to link (403 EMAIL_NOT_VERIFIED): an account
+// already exists for this email, and the backend won't hand it over until the Firebase
+// email is verified. Not a reconnect form anymore -- the linking is automatic once the
+// email is confirmed, so we just nudge verification.
+function VerifyEmailCard() {
+  const { user, resendVerification } = useAuth();
+  const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
 
-function GetStartedForm() {
-  const { identify } = useCustomer();
-  const [contact, setContact] = useState<GuestContact>(EMPTY_CONTACT);
-  const [submitting, setSubmitting] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-
-  async function handleSubmit(event: React.FormEvent) {
-    event.preventDefault();
-    if (!contact.email.trim() && !contact.phone.trim()) {
-      setErrorMessage("Add an email or phone number so we can set up your account.");
-      return;
-    }
-    setSubmitting(true);
-    setErrorMessage(null);
+  async function handleResend() {
+    setStatus("sending");
     try {
-      await identify({
-        name: contact.name.trim(),
-        ...(contact.email.trim() && { email: contact.email.trim() }),
-        ...(contact.phone.trim() && { phone: contact.phone.trim() }),
-      });
-    } catch (error) {
-      if (error instanceof ApiError && error.status === 409) {
-        setErrorMessage(
-          "There's already an account with that email or phone. If it's yours, place a pre-order or reserve an event with the same details and we'll pick it up automatically.",
-        );
-      } else {
-        setErrorMessage(
-          error instanceof ApiError ? error.message : "Couldn't set up your account. Please try again.",
-        );
-      }
-    } finally {
-      setSubmitting(false);
+      await resendVerification();
+      setStatus("sent");
+    } catch {
+      setStatus("error");
     }
   }
 
   return (
     <div className="rounded-2xl border border-stone-200 bg-white p-6 shadow-sm">
-      <h2 className="text-lg font-semibold text-stone-900">Set up your lightweight account</h2>
+      <h2 className="text-lg font-semibold text-stone-900">Verify your email to continue</h2>
       <p className="mt-1 text-sm text-stone-500">
-        No password needed — just your name and an email or phone number. Placing a pre-order or
-        reserving an event also links to this account automatically if you use the same details.
+        An account already exists for {user?.email}. For your security, confirm your email
+        to link it — then your loyalty stamps and pre-order history restore automatically.
       </p>
-      <form className="mt-4 flex flex-col gap-3" onSubmit={handleSubmit}>
-        <GuestContactFields contact={contact} onChange={setContact} idPrefix="account" />
-        {errorMessage && <p className="text-sm text-rose-600">{errorMessage}</p>}
+      {status === "sent" ? (
+        <p className="mt-4 text-sm font-medium text-emerald-700">
+          Verification email sent. Click the link, then reload this page.
+        </p>
+      ) : (
         <button
-          type="submit"
-          className="mt-2 self-start rounded-lg bg-brand-700 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-800 disabled:cursor-default disabled:opacity-50"
-          disabled={submitting}
+          type="button"
+          onClick={handleResend}
+          disabled={status === "sending"}
+          className="mt-4 rounded-lg bg-brand-700 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-800 disabled:cursor-default disabled:opacity-50"
         >
-          {submitting ? "Setting up…" : "Continue"}
+          {status === "sending" ? "Sending…" : "Resend verification email"}
         </button>
-      </form>
+      )}
+      {status === "error" && (
+        <p className="mt-2 text-sm text-rose-600">Couldn't send. Please try again shortly.</p>
+      )}
     </div>
   );
 }
@@ -114,41 +100,93 @@ function OrderHistory({ customerId }: { customerId: string }) {
     return <p className="text-sm text-stone-500">No pre-orders yet.</p>;
   }
 
+  // Preview: the 3 most recent (backend returns oldest-first), with a link to the full
+  // Orders page for everything else.
+  const recent = [...orders].reverse().slice(0, 3);
+
   return (
-    <div className="divide-y divide-stone-100">
-      {orders.map((order) => (
-        <Link
-          key={order.id}
-          to={`/orders/${order.id}`}
-          className="flex items-center justify-between gap-3 py-3 text-sm hover:text-brand-700"
-        >
-          <span className="text-stone-700">
-            {new Date(order.createdAt).toLocaleDateString()} — {formatCents(order.totalCents)}
-          </span>
-          <OrderStatusBadge status={order.status} />
-        </Link>
-      ))}
+    <div className="flex flex-col gap-1">
+      <div className="divide-y divide-stone-100">
+        {recent.map((order) => (
+          <OrderRow key={order.id} order={order} />
+        ))}
+      </div>
+      <Link
+        to="/orders"
+        className="mt-1 self-start px-3 text-sm font-medium text-brand-700 hover:text-brand-800"
+      >
+        View all orders →
+      </Link>
     </div>
   );
 }
 
 export function AccountPage() {
-  const { customer, signOut, refresh } = useCustomer();
+  const { user, signOut: signOutAuth } = useAuth();
+  const { customer, signOut: signOutCustomer, loadMe } = useCustomer();
+  const navigate = useNavigate();
   const [refreshing, setRefreshing] = useState(false);
+  // Tracks the GET /customers/me resolution so the no-customer view can tell "still
+  // loading" from "blocked on email verification (403)" from "failed".
+  const [meStatus, setMeStatus] = useState<"loading" | "resolved" | "unverified" | "error">(
+    "loading",
+  );
 
   useEffect(() => {
-    if (customer) {
-      // Best-effort: pull the latest stamp count via GET /customers/:id (public).
-      refresh().catch(() => undefined);
+    if (!user) {
+      return;
     }
+    let cancelled = false;
+    setMeStatus("loading");
+    // Firebase-authed self-lookup: links the uid to the backend record (verified email)
+    // or creates it, and returns fresh loyalty/order data -- the cross-device restore.
+    loadMe()
+      .then((result) => {
+        if (!cancelled) {
+          setMeStatus(result ? "resolved" : "unverified");
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setMeStatus("error");
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [customer?.id]);
+  }, [user?.uid]);
 
+  async function handleLogout() {
+    await signOutAuth();
+    signOutCustomer();
+    navigate("/login");
+  }
+
+  // Behind ProtectedRoute, so there's always a Firebase user. No customer record yet means
+  // /customers/me is still resolving, was refused (unverified email), or errored.
   if (!customer) {
     return (
-      <div>
-        <h1 className="mb-6 text-2xl font-bold text-stone-900">My Account</h1>
-        <GetStartedForm />
+      <div className="flex flex-col gap-6">
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold text-stone-900">My Account</h1>
+          <button
+            type="button"
+            className="rounded-lg border border-stone-300 px-4 py-2 text-sm text-stone-600 hover:bg-stone-50"
+            onClick={() => void handleLogout()}
+          >
+            Log out
+          </button>
+        </div>
+        {meStatus === "unverified" ? (
+          <VerifyEmailCard />
+        ) : meStatus === "error" ? (
+          <p className="text-sm text-rose-600">
+            Couldn't load your account. Please reload the page.
+          </p>
+        ) : (
+          <p className="text-sm text-stone-500">Loading your account…</p>
+        )}
       </div>
     );
   }
@@ -156,7 +194,7 @@ export function AccountPage() {
   async function handleRefresh() {
     setRefreshing(true);
     try {
-      await refresh();
+      await loadMe();
     } catch {
       // Non-critical; the previously known stamp count stays on screen.
     } finally {
@@ -173,15 +211,15 @@ export function AccountPage() {
         <button
           type="button"
           className="rounded-lg border border-stone-300 px-4 py-2 text-sm text-stone-600 hover:bg-stone-50"
-          onClick={signOut}
+          onClick={() => void handleLogout()}
         >
-          Not you? Switch account
+          Log out
         </button>
       </div>
 
       <div className="rounded-2xl border border-stone-200 bg-white p-6 shadow-sm">
-        <p className="font-medium text-stone-900">{customer.name}</p>
-        <p className="text-sm text-stone-500">{customer.email ?? customer.phone}</p>
+        <p className="font-medium text-stone-900">{customerFullName(customer)}</p>
+        <p className="text-sm text-stone-500">{user?.email ?? customer.email ?? customer.phone}</p>
       </div>
 
       <div className="rounded-2xl border border-stone-200 bg-white p-6 shadow-sm">

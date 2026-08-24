@@ -1,16 +1,28 @@
 import { Navigate, Route, Routes } from "react-router-dom";
+import { AuthProvider } from "@/lib/auth-context";
 import { CustomerProvider } from "@/lib/customer-context";
+import { CartProvider } from "@/lib/cart-context";
+import { FavoritesProvider } from "@/lib/favorites-context";
 import { NavBar } from "@/components/NavBar";
+import { EmailVerificationBanner } from "@/components/EmailVerificationBanner";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { CatalogPage } from "@/pages/CatalogPage";
 import { BookDetailPage } from "@/pages/BookDetailPage";
 import { AccountPage } from "@/pages/AccountPage";
+import { AuthPage } from "@/pages/AuthPage";
+import { OrdersPage } from "@/pages/OrdersPage";
 import { OrderStatusPage } from "@/pages/OrderStatusPage";
 import { EventsPage } from "@/pages/EventsPage";
+import { FavoritesPage } from "@/pages/FavoritesPage";
+import { CartPage } from "@/pages/CartPage";
+import { CheckoutPage } from "@/pages/CheckoutPage";
+import { CheckoutReturnPage } from "@/pages/CheckoutReturnPage";
 
 function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen bg-stone-50">
       <NavBar />
+      <EmailVerificationBanner />
       <main className="mx-auto max-w-5xl px-6 py-8">{children}</main>
     </div>
   );
@@ -45,10 +57,30 @@ function AppRoutes() {
         }
       />
       <Route
+        path="/login"
+        element={
+          <AppLayout>
+            <AuthPage />
+          </AppLayout>
+        }
+      />
+      <Route
         path="/account"
         element={
           <AppLayout>
-            <AccountPage />
+            <ProtectedRoute>
+              <AccountPage />
+            </ProtectedRoute>
+          </AppLayout>
+        }
+      />
+      <Route
+        path="/orders"
+        element={
+          <AppLayout>
+            <ProtectedRoute>
+              <OrdersPage />
+            </ProtectedRoute>
           </AppLayout>
         }
       />
@@ -60,6 +92,38 @@ function AppRoutes() {
           </AppLayout>
         }
       />
+      <Route
+        path="/favorites"
+        element={
+          <AppLayout>
+            <FavoritesPage />
+          </AppLayout>
+        }
+      />
+      <Route
+        path="/cart"
+        element={
+          <AppLayout>
+            <CartPage />
+          </AppLayout>
+        }
+      />
+      <Route
+        path="/checkout"
+        element={
+          <AppLayout>
+            <CheckoutPage />
+          </AppLayout>
+        }
+      />
+      <Route
+        path="/checkout/return"
+        element={
+          <AppLayout>
+            <CheckoutReturnPage />
+          </AppLayout>
+        }
+      />
       <Route path="*" element={<Navigate to="/catalog" replace />} />
     </Routes>
   );
@@ -67,8 +131,14 @@ function AppRoutes() {
 
 export function App() {
   return (
-    <CustomerProvider>
-      <AppRoutes />
-    </CustomerProvider>
+    <AuthProvider>
+      <CustomerProvider>
+        <FavoritesProvider>
+          <CartProvider>
+            <AppRoutes />
+          </CartProvider>
+        </FavoritesProvider>
+      </CustomerProvider>
+    </AuthProvider>
   );
 }

@@ -34,12 +34,18 @@ export type Book = {
 
 export type Customer = {
   id: string;
-  name: string;
+  firstName: string;
+  lastName: string | null;
   email: string | null;
   phone: string | null;
   loyaltyStampCount: number;
   createdAt: string;
 };
+
+// lastName is optional (guest-checkout / one-name rows); render a single display name.
+export function customerFullName(customer: Pick<Customer, "firstName" | "lastName">): string {
+  return customer.lastName ? `${customer.firstName} ${customer.lastName}` : customer.firstName;
+}
 
 export type OrderItem = {
   id: string;

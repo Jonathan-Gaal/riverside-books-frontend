@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { api, ApiError } from "@/lib/api";
 import { useCustomer } from "@/lib/customer-context";
-import type { EventTicket, StoreEvent } from "@/types";
+import { customerFullName, type EventTicket, type StoreEvent } from "@/types";
 import { GuestContactFields, type GuestContact } from "@/components/GuestContactFields";
 
 const EMPTY_CONTACT: GuestContact = { name: "", email: "", phone: "" };
@@ -40,7 +40,7 @@ function ReservationControl({ event }: { event: StoreEvent }) {
   function handleReserveClick() {
     if (customer) {
       void reserve({
-        name: customer.name,
+        name: customerFullName(customer),
         ...(customer.email && { email: customer.email }),
         ...(customer.phone && { phone: customer.phone }),
       });

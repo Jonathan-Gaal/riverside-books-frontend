@@ -1,11 +1,12 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
-import { api } from "@/lib/api";
+import { api, ApiError } from "@/lib/api";
 import type { Customer } from "@/types";
 
 const STORAGE_KEY = "riverside_customer";
 
 export type IdentifyInput = {
-  name: string;
+  firstName: string;
+  lastName?: string;
   email?: string;
   phone?: string;
 };
@@ -20,6 +21,11 @@ type CustomerContextValue = {
   identify: (input: IdentifyInput) => Promise<Customer>;
   adopt: (customer: Customer) => void;
   refresh: () => Promise<void>;
+  // Fetches the signed-in customer via the Firebase-authed GET /customers/me, which
+  // links/creates the record server-side by uid+email -- this is what restores loyalty
+  // and order history on a fresh device after login. Returns null (and leaves customer
+  // untouched) on a 403 EMAIL_NOT_VERIFIED so the caller can prompt to verify instead.
+  loadMe: () => Promise<Customer | null>;
   signOut: () => void;
 };
 
@@ -64,6 +70,25 @@ export function CustomerProvider({ children }: { children: ReactNode }) {
     setCustomer(nextCustomer);
   }
 
+  async function loadMe(): Promise<Customer | null> {
+    setLoading(true);
+    try {
+      const me = await api.get<Customer>("/customers/me");
+      setCustomer(me);
+      return me;
+    } catch (error) {
+      // 403 = an account exists for this email but the Firebase email isn't verified yet;
+      // the backend refuses to link it. Surface as null so the caller nudges verification
+      // rather than treating it as a hard failure.
+      if (error instanceof ApiError && error.status === 403) {
+        return null;
+      }
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  }
+
   async function refresh(): Promise<void> {
     if (!customer) {
       return;
@@ -79,7 +104,9 @@ export function CustomerProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <CustomerContext.Provider value={{ customer, loading, identify, adopt, refresh, signOut }}>
+    <CustomerContext.Provider
+      value={{ customer, loading, identify, adopt, refresh, loadMe, signOut }}
+    >
       {children}
     </CustomerContext.Provider>
   );
