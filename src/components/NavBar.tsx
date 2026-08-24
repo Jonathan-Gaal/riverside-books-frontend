@@ -53,13 +53,28 @@ export function NavBar() {
         </nav>
         <NavLink
           to="/cart"
+          aria-label={`Cart${itemCount > 0 ? ` (${itemCount} item${itemCount === 1 ? "" : "s"})` : ""}`}
           className={({ isActive }) =>
-            `relative rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+            `relative flex h-9 w-9 items-center justify-center rounded-full transition-colors ${
               isActive ? "bg-brand-700 text-white" : "text-stone-600 hover:bg-brand-50 hover:text-brand-800"
             }`
           }
         >
-          Cart
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="h-5 w-5"
+            aria-hidden="true"
+          >
+            <circle cx="9" cy="20" r="1.4" />
+            <circle cx="18" cy="20" r="1.4" />
+            <path d="M2.5 3.5h2l2.2 11.2a1.5 1.5 0 0 0 1.5 1.2h8.4a1.5 1.5 0 0 0 1.5-1.2L21 7H6" />
+          </svg>
           {itemCount > 0 && (
             <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-rose-500 px-1 text-xs font-semibold text-white">
               {itemCount}
