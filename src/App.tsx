@@ -1,9 +1,13 @@
 import { Navigate, Route, Routes } from "react-router-dom";
+import { AuthProvider } from "@/lib/auth-context";
 import { CustomerProvider } from "@/lib/customer-context";
 import { NavBar } from "@/components/NavBar";
+import { EmailVerificationBanner } from "@/components/EmailVerificationBanner";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { CatalogPage } from "@/pages/CatalogPage";
 import { BookDetailPage } from "@/pages/BookDetailPage";
 import { AccountPage } from "@/pages/AccountPage";
+import { AuthPage } from "@/pages/AuthPage";
 import { OrderStatusPage } from "@/pages/OrderStatusPage";
 import { EventsPage } from "@/pages/EventsPage";
 
@@ -11,6 +15,7 @@ function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen bg-stone-50">
       <NavBar />
+      <EmailVerificationBanner />
       <main className="mx-auto max-w-5xl px-6 py-8">{children}</main>
     </div>
   );
@@ -45,10 +50,20 @@ function AppRoutes() {
         }
       />
       <Route
+        path="/login"
+        element={
+          <AppLayout>
+            <AuthPage />
+          </AppLayout>
+        }
+      />
+      <Route
         path="/account"
         element={
           <AppLayout>
-            <AccountPage />
+            <ProtectedRoute>
+              <AccountPage />
+            </ProtectedRoute>
           </AppLayout>
         }
       />
@@ -67,8 +82,10 @@ function AppRoutes() {
 
 export function App() {
   return (
-    <CustomerProvider>
-      <AppRoutes />
-    </CustomerProvider>
+    <AuthProvider>
+      <CustomerProvider>
+        <AppRoutes />
+      </CustomerProvider>
+    </AuthProvider>
   );
 }
