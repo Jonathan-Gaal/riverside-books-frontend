@@ -235,8 +235,9 @@ export function AccountPage() {
           />
         </div>
         <p className="mt-3 text-sm text-stone-500">
-          Earn a stamp with every in-store purchase. Collect {STAMPS_PER_REWARD} stamps for a free
-          reward — ask staff to redeem it at checkout.
+          Earn a stamp with every purchase — we add it automatically once your order is
+          completed, whether you paid online or picked up in store. Collect {STAMPS_PER_REWARD}{" "}
+          stamps for a free reward — ask staff to redeem it at checkout.
         </p>
         <button
           type="button"

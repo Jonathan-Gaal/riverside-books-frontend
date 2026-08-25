@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useLocation, useParams } from "react-router-dom";
 import { api, ApiError } from "@/lib/api";
 import { formatCents } from "@/lib/money";
-import type { Order, OrderStatus } from "@/types";
+import { orderItemName, type Order, type OrderStatus } from "@/types";
 import { OrderStatusBadge } from "@/components/OrderStatusBadge";
 
 const STATUS_SEQUENCE: { status: OrderStatus; label: string }[] = [
@@ -113,7 +113,7 @@ export function OrderStatusPage() {
             className="flex justify-between border-b border-stone-100 py-2 text-sm last:border-b-0"
           >
             <span className="text-stone-700">
-              {item.quantity} × {item.book?.title ?? "Title"}
+              {item.quantity} × {orderItemName(item)}
             </span>
             <span className="text-stone-700">{formatCents(item.unitPriceCents * item.quantity)}</span>
           </div>

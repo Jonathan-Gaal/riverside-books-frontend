@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import type { Order } from "@/types";
+import { orderItemName, type Order } from "@/types";
 import { formatCents } from "@/lib/money";
 import { OrderStatusBadge } from "@/components/OrderStatusBadge";
 import { PaymentStatusBadge } from "@/components/PaymentStatusBadge";
@@ -15,7 +15,7 @@ function itemsPreview(order: Order): string {
   if (items.length === 0) {
     return "—";
   }
-  const first = items[0]?.book?.title ?? "1 item";
+  const first = items[0] ? orderItemName(items[0]) : "1 item";
   const remaining = items.length - 1;
   return remaining > 0 ? `${first} + ${remaining} more` : first;
 }

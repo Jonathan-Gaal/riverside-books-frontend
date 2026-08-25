@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { api, ApiError } from "@/lib/api";
 import { useCustomer } from "@/lib/customer-context";
-import { customerFullName, type Book, type Order } from "@/types";
+import { bookToCartProduct, customerFullName, type Book, type Order } from "@/types";
 import { formatCents } from "@/lib/money";
 import { StockBadge } from "@/components/StockBadge";
 import { AddToCartButton } from "@/components/AddToCartButton";
@@ -124,7 +124,11 @@ export function BookDetailPage() {
           <StockBadge status={book.inventory?.status} />
         </div>
         <div className="mt-4 flex items-center gap-3">
-          <AddToCartButton book={book} className="px-5 py-2.5" />
+          <AddToCartButton
+            product={bookToCartProduct(book)}
+            outOfStock={book.inventory?.status === "out_of_stock"}
+            className="px-5 py-2.5"
+          />
           <FavoriteButton book={book} />
           <span className="text-sm text-stone-400">Add to cart to pay online at checkout.</span>
         </div>

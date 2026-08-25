@@ -31,9 +31,11 @@ export function PaginationControls({
     }
   }
 
-  if (totalPages <= 1) {
-    return null;
-  }
+  // With a single page there's nothing to navigate, but we still render the controls
+  // (greyed out) so the layout stays consistent across catalogs -- a page with few
+  // items doesn't lose the footer. Every control is naturally disabled here since
+  // currentPage === totalPages === 1.
+  const singlePage = totalPages <= 1;
 
   return (
     <div className="mt-8 flex flex-wrap items-center justify-center gap-2">
@@ -90,9 +92,10 @@ export function PaginationControls({
           max={totalPages}
           value={jumpToPage}
           onChange={(event) => setJumpToPage(event.target.value)}
-          className="w-16 rounded-lg border border-stone-300 px-2 py-1.5 text-center text-sm"
+          disabled={singlePage}
+          className="w-16 rounded-lg border border-stone-300 px-2 py-1.5 text-center text-sm disabled:cursor-default disabled:opacity-40"
         />
-        <button type="submit" className={BUTTON_CLASSES}>
+        <button type="submit" className={BUTTON_CLASSES} disabled={singlePage}>
           Go
         </button>
       </form>

@@ -1,24 +1,25 @@
 import { useState } from "react";
 import { useCart } from "@/lib/cart-context";
-import type { Book } from "@/types";
+import type { CartProduct } from "@/types";
 
-// Adds a book to the cart with brief "Added" feedback. Isolates its click so it works
-// inside a card <Link>. Disabled for out-of-stock titles.
+// Adds a product to the cart with brief "Added" feedback. Isolates its click so it works
+// inside a card <Link>. Disabled when out of stock.
 export function AddToCartButton({
-  book,
+  product,
+  outOfStock = false,
   className = "",
 }: {
-  book: Book;
+  product: CartProduct;
+  outOfStock?: boolean;
   className?: string;
 }) {
   const { addItem } = useCart();
   const [added, setAdded] = useState(false);
-  const outOfStock = book.inventory?.status === "out_of_stock";
 
   function handleClick(event: React.MouseEvent) {
     event.preventDefault();
     event.stopPropagation();
-    addItem(book);
+    addItem(product);
     setAdded(true);
     setTimeout(() => setAdded(false), 1200);
   }

@@ -2,25 +2,21 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { CartProvider, useCart } from "@/lib/cart-context";
-import type { Book } from "@/types";
+import type { CartProduct } from "@/types";
 
-function makeBook(id: string, priceCents: number): Book {
+function makeProduct(id: string, priceCents: number, kind: CartProduct["kind"] = "book"): CartProduct {
   return {
+    kind,
     id,
-    title: `Book ${id}`,
-    author: "Author",
-    isbn: null,
+    name: `Product ${id}`,
     priceCents,
-    category: null,
-    description: null,
     imageUrl: null,
-    createdAt: "",
-    updatedAt: "",
+    subtitle: null,
   };
 }
 
-const BOOK_A = makeBook("a", 1000);
-const BOOK_B = makeBook("b", 250);
+const BOOK_A = makeProduct("a", 1000);
+const GIFT_B = makeProduct("b", 250, "gift");
 
 function Harness() {
   const { items, itemCount, subtotalCents, addItem, setQuantity, removeItem, clear } = useCart();
@@ -30,7 +26,7 @@ function Harness() {
       <p data-testid="subtotal">{subtotalCents}</p>
       <p data-testid="lines">{items.length}</p>
       <button onClick={() => addItem(BOOK_A)}>Add A</button>
-      <button onClick={() => addItem(BOOK_B, 2)}>Add 2 B</button>
+      <button onClick={() => addItem(GIFT_B, 2)}>Add 2 B</button>
       <button onClick={() => setQuantity("a", 3)}>Set A 3</button>
       <button onClick={() => setQuantity("a", 0)}>Zero A</button>
       <button onClick={() => removeItem("b")}>Remove B</button>
@@ -52,7 +48,7 @@ beforeEach(() => {
 });
 
 describe("CartProvider", () => {
-  it("adds items and increments quantity for the same book", async () => {
+  it("adds items and increments quantity for the same product", async () => {
     const user = userEvent.setup();
     renderCart();
     await user.click(screen.getByText("Add A"));
@@ -85,7 +81,28 @@ describe("CartProvider", () => {
     renderCart();
     await user.click(screen.getByText("Add A"));
     const stored = JSON.parse(localStorage.getItem("riverside_cart") ?? "[]");
-    expect(stored[0].book.id).toBe("a");
+    expect(stored[0].product.id).toBe("a");
     expect(stored[0].quantity).toBe(1);
+  });
+
+  it("migrates a pre-gifts cart stored in the old { book } shape", () => {
+    localStorage.setItem(
+      "riverside_cart",
+      JSON.stringify([
+        {
+          book: { id: "old-1", title: "Legacy", author: "Author", priceCents: 999, imageUrl: null },
+          quantity: 2,
+        },
+      ]),
+    );
+    renderCart();
+    expect(screen.getByTestId("lines")).toHaveTextContent("1");
+    expect(screen.getByTestId("subtotal")).toHaveTextContent("1998");
+  });
+
+  it("drops malformed stored entries instead of crashing", () => {
+    localStorage.setItem("riverside_cart", JSON.stringify([{ quantity: 1 }, null, "nope"]));
+    renderCart();
+    expect(screen.getByTestId("lines")).toHaveTextContent("0");
   });
 });

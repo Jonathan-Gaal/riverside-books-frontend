@@ -4,11 +4,15 @@ import userEvent from "@testing-library/user-event";
 import { PaginationControls } from "@/components/PaginationControls";
 
 describe("PaginationControls", () => {
-  it("renders nothing when there's only one page", () => {
-    const { container } = render(
-      <PaginationControls currentPage={1} totalPages={1} onPageChange={vi.fn()} />,
-    );
-    expect(container).toBeEmptyDOMElement();
+  it("renders greyed-out controls when there's only one page", () => {
+    render(<PaginationControls currentPage={1} totalPages={1} onPageChange={vi.fn()} />);
+    expect(screen.getByText("Page 1 of 1")).toBeInTheDocument();
+    expect(screen.getByLabelText("First page")).toBeDisabled();
+    expect(screen.getByLabelText("Previous page")).toBeDisabled();
+    expect(screen.getByLabelText("Next page")).toBeDisabled();
+    expect(screen.getByLabelText("Last page")).toBeDisabled();
+    expect(screen.getByLabelText("Go to page")).toBeDisabled();
+    expect(screen.getByText("Go")).toBeDisabled();
   });
 
   it("disables First/Back on the first page and Next/Last on the last page", () => {
