@@ -6,6 +6,7 @@ import {
 } from "@stripe/react-stripe-js";
 import { getStripePromise } from "@/lib/stripe";
 import { api } from "@/lib/api";
+import { cartProductToOrderItemRef } from "@/types";
 import { useCart } from "@/lib/cart-context";
 import { useCustomer } from "@/lib/customer-context";
 import { useAuth } from "@/lib/auth-context";
@@ -54,12 +55,12 @@ export function CheckoutPage() {
   const [guestMode, setGuestMode] = useState(false);
 
   // Ask the backend to create the Checkout Session and hand back its client secret.
-  // Sending only book ids + quantities -- the server prices the order. customerId links
-  // the order to a signed-in customer; guests are matched by the email Stripe collects.
+  // Sending only product refs + quantities -- the server prices the order. customerId
+  // links the order to a signed-in customer; guests are matched by Stripe's email.
   const fetchClientSecret = useCallback(() => {
     return api
       .post<{ clientSecret: string }>("/checkout/session", {
-        items: items.map((i) => ({ bookId: i.book.id, quantity: i.quantity })),
+        items: items.map((i) => ({ ...cartProductToOrderItemRef(i.product), quantity: i.quantity })),
         ...(customer?.id && { customerId: customer.id }),
       })
       .then((data) => data.clientSecret);

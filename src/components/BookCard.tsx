@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import type { Book } from "@/types";
+import { bookToCartProduct, type Book } from "@/types";
 import { formatCents } from "@/lib/money";
 import { StockBadge } from "@/components/StockBadge";
 import { BookCover } from "@/components/BookCover";
@@ -25,7 +25,11 @@ export function BookCard({ book }: { book: Book }) {
           <span className="font-semibold text-brand-800">{formatCents(book.priceCents)}</span>
           <StockBadge status={book.inventory?.status} />
         </div>
-        <AddToCartButton book={book} className="mt-3 w-full" />
+        <AddToCartButton
+          product={bookToCartProduct(book)}
+          outOfStock={book.inventory?.status === "out_of_stock"}
+          className="mt-3 w-full"
+        />
       </div>
     </Link>
   );

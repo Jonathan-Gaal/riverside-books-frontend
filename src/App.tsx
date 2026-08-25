@@ -7,6 +7,8 @@ import { NavBar } from "@/components/NavBar";
 import { EmailVerificationBanner } from "@/components/EmailVerificationBanner";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { CatalogPage } from "@/pages/CatalogPage";
+import { GiftsPage } from "@/pages/GiftsPage";
+import { CardsPage } from "@/pages/CardsPage";
 import { BookDetailPage } from "@/pages/BookDetailPage";
 import { AccountPage } from "@/pages/AccountPage";
 import { AuthPage } from "@/pages/AuthPage";
@@ -37,6 +39,22 @@ function AppRoutes() {
         element={
           <AppLayout>
             <CatalogPage />
+          </AppLayout>
+        }
+      />
+      <Route
+        path="/gifts"
+        element={
+          <AppLayout>
+            <GiftsPage />
+          </AppLayout>
+        }
+      />
+      <Route
+        path="/cards"
+        element={
+          <AppLayout>
+            <CardsPage />
           </AppLayout>
         }
       />

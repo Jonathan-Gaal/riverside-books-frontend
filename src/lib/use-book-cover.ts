@@ -2,20 +2,25 @@ import { useEffect, useState } from "react";
 import { fetchOpenLibraryCoverUrl } from "@/lib/book-cover";
 import type { Book } from "@/types";
 
-// Prefers the backend's own imageUrl (real data, once staff add it via Product
-// B) and only falls back to an Open Library lookup when that's empty.
-export function useBookCoverUrl(book: Book): string | null {
-  const [coverUrl, setCoverUrl] = useState<string | null>(book.imageUrl);
+// Prefers a supplied imageUrl (real data, once staff add it via Product B) and only
+// falls back to an Open Library lookup by title/author when that's empty. Works from
+// plain fields so callers without a full Book (e.g. a normalized cart line) can use it.
+export function useCoverUrl(
+  title: string,
+  author: string,
+  imageUrl: string | null,
+): string | null {
+  const [coverUrl, setCoverUrl] = useState<string | null>(imageUrl);
 
   useEffect(() => {
-    if (book.imageUrl) {
-      setCoverUrl(book.imageUrl);
+    if (imageUrl) {
+      setCoverUrl(imageUrl);
       return;
     }
 
     let cancelled = false;
     setCoverUrl(null);
-    fetchOpenLibraryCoverUrl(book.title, book.author).then((url) => {
+    fetchOpenLibraryCoverUrl(title, author).then((url) => {
       if (!cancelled) {
         setCoverUrl(url);
       }
@@ -24,7 +29,11 @@ export function useBookCoverUrl(book: Book): string | null {
     return () => {
       cancelled = true;
     };
-  }, [book.id, book.imageUrl, book.title, book.author]);
+  }, [imageUrl, title, author]);
 
   return coverUrl;
+}
+
+export function useBookCoverUrl(book: Book): string | null {
+  return useCoverUrl(book.title, book.author, book.imageUrl);
 }
