@@ -9,6 +9,7 @@ import { AddToCartButton } from "@/components/AddToCartButton";
 import { FavoriteButton } from "@/components/FavoriteButton";
 import { BookCover } from "@/components/BookCover";
 import { GuestContactFields, type GuestContact } from "@/components/GuestContactFields";
+import { MarketingContentSidebar } from "@/components/MarketingContentSidebar";
 
 const EMPTY_CONTACT: GuestContact = { name: "", email: "", phone: "" };
 
@@ -107,7 +108,13 @@ export function BookDetailPage() {
   }
 
   return (
-    <div className="grid gap-8 md:grid-cols-[220px_1fr]">
+    <div
+      className={`grid gap-8 ${
+        book.marketingContent
+          ? "md:grid-cols-[220px_1fr_300px]"
+          : "md:grid-cols-[220px_1fr]"
+      }`}
+    >
       <div className="flex aspect-[3/4] items-center justify-center overflow-hidden rounded-2xl border border-stone-200 bg-brand-50">
         <BookCover book={book} imageClassName="h-full w-full object-cover" fallbackClassName="text-6xl" />
       </div>
@@ -133,15 +140,6 @@ export function BookDetailPage() {
           <span className="text-sm text-stone-400">Add to cart to pay online at checkout.</span>
         </div>
         {book.description && <p className="mt-4 text-stone-700">{book.description}</p>}
-
-        {book.marketingContent && (
-          <div className="mt-6 rounded-2xl border border-brand-200 bg-brand-50 p-6">
-            <h2 className="text-sm font-semibold uppercase tracking-wide text-brand-700">
-              {book.marketingContent.headline}
-            </h2>
-            <p className="mt-2 text-stone-700">{book.marketingContent.bodyCopy}</p>
-          </div>
-        )}
 
         <div className="mt-6 rounded-2xl border border-stone-200 bg-white p-6 shadow-sm">
           <h2 className="text-lg font-semibold text-stone-900">Pre-order for pickup</h2>
@@ -198,6 +196,10 @@ export function BookDetailPage() {
           </form>
         </div>
       </div>
+
+      {book.marketingContent && (
+        <MarketingContentSidebar content={book.marketingContent} />
+      )}
     </div>
   );
 }
